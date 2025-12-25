@@ -1,23 +1,17 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
-from fastapi import Request
 from pydantic import BaseModel
 from typing import List, Optional
-import uvicorn
+import os
 
-
-
+# Получаем абсолютный путь к корневой директории
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 app = FastAPI(title="GameReviews Platform API")
 
-app.mount("/static", StaticFiles(directory="../static"), name="static")
-templates = Jinja2Templates(directory="../templates")
 # Разрешаем CORS
 app.add_middleware(
     CORSMiddleware,
@@ -26,8 +20,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Монтируем статические файлы
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Монтируем статические файлы - ТОЛЬКО ОДИН РАЗ с правильным путем
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 # Пример модели данных
 class Game(BaseModel):
