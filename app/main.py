@@ -1,9 +1,9 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
-import os
+from pydantic import BaseModel
+from typing import List, Optional
+import uvicorn
 
 # Временно отключаем сложные импорты
 # from sqlalchemy.orm import Session
