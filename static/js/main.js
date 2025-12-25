@@ -1,207 +1,157 @@
-// Базовый API клиент
-const API_BASE_URL = window.location.origin + '/api';
-let currentToken = localStorage.getItem('token');
-
-const api = {
-    async request(endpoint, options = {}) {
-        const url = `${API_BASE_URL}${endpoint}`;
-        const headers = {
-            'Content-Type': 'application/json',
-            ...options.headers
-        };
-
-        if (currentToken) {
-            headers['Authorization'] = `Bearer ${currentToken}`;
-        }
-
-        const response = await fetch(url, {
-            ...options,
-            headers
-        });
-
-        if (response.status === 401) {
-            localStorage.removeItem('token');
-            currentToken = null;
-            showLogin();
-            throw new Error('Session expired');
-        }
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'Request failed');
-        }
-
-        return response.json();
-    },
-
-    async getGames(search = '') {
-        const query = search ? `?search=${encodeURIComponent(search)}` : '';
-        return this.request(`/games${query}`);
-    },
-
-    async getGame(id) {
-        return this.request(`/games/${id}`);
-    },
-
-    async createGame(game) {
-        return this.request('/games', {
-            method: 'POST',
-            body: JSON.stringify(game)
-        });
-    },
-
-    async getGameReviews(gameId) {
-        return this.request(`/games/${gameId}/reviews`);
-    },
-
-    async createReview(review) {
-        return this.request('/reviews', {
-            method: 'POST',
-            body: JSON.stringify(review)
-        });
-    },
-
-    async register(user) {
-        return this.request('/auth/register', {
-            method: 'POST',
-            body: JSON.stringify(user)
-        });
-    },
-
-    async login(email, password) {
-        const formData = new FormData();
-        formData.append('username', email);
-        formData.append('password', password);
-        
-        const response = await fetch(`${API_BASE_URL}/auth/login`, {
-            method: 'POST',
-            body: formData
-        });
-
-        if (!response.ok) {
-            throw new Error('Login failed');
-        }
-
-        const data = await response.json();
-        currentToken = data.access_token;
-        localStorage.setItem('token', currentToken);
-        return data;
-    },
-
-    async getCurrentUser() {
-        try {
-            return await this.request('/users/me');
-        } catch (error) {
-            return null;
-        }
-    }
-};
-
-// Утилиты
-function showAlert(message, type = 'success') {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type}`;
-    alertDiv.textContent = message;
-    
-    const container = document.querySelector('.container');
-    container.insertBefore(alertDiv, container.firstChild);
-    
-    setTimeout(() => alertDiv.remove(), 5000);
-}
-
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-}
-
-// Рендеринг
-function renderGameCard(game) {
-    return `
-        <div class="card game-card">
-            <h3>${game.title}</h3>
-            ${game.genre ? `<p><strong>Жанр:</strong> ${game.genre}</p>` : ''}
-            ${game.release_year ? `<p><strong>Год выпуска:</strong> ${game.release_year}</p>` : ''}
-            ${game.developer ? `<p><strong>Разработчик:</strong> ${game.developer}</p>` : ''}
-            ${game.description ? `<p>${game.description.substring(0, 100)}...</p>` : ''}
-            <button onclick="viewGame(${game.id})" class="btn">Подробнее</button>
-        </div>
-    `;
-}
-
-function renderReviewCard(review) {
-    const stars = '★'.repeat(review.rating) + '☆'.repeat(10 - review.rating);
-    return `
-        <div class="card review-card">
-            <div class="rating">${stars} (${review.rating}/10)</div>
-            <p>${review.content}</p>
-            <small>Автор: ${review.author.username} • ${formatDate(review.created_at)}</small>
-        </div>
-    `;
-}
-
-// Навигация
-function showHome() {
-    document.getElementById('content').innerHTML = `
-        <div class="main-content">
-            <h2>Последние игры</h2>
-            <div class="form-group">
-                <input type="text" id="searchInput" placeholder="Поиск игр..." 
-                       oninput="searchGames()">
+// Функции для навигации
+async function showHome() {
+    const content = document.getElementById('content');
+    content.innerHTML = `
+        <div class="section">
+            <h2><i class="fas fa-home"></i> Добро пожаловать на GameReviews Platform!</h2>
+            <p>Здесь вы можете читать и писать обзоры на видеоигры.</p>
+            <p>Используйте меню для навигации по платформе.</p>
+            <div class="stats">
+                <div class="stat-card">
+                    <h3><i class="fas fa-gamepad"></i> Игр в базе</h3>
+                    <p id="gamesCount">Загрузка...</p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class="fas fa-users"></i> Пользователей</h3>
+                    <p id="usersCount">Загрузка...</p>
+                </div>
             </div>
-            <div id="gamesList"></div>
-            ${currentToken ? `
-                <button onclick="showAddGame()" class="btn btn-success">Добавить игру</button>
-            ` : ''}
         </div>
     `;
-    loadGames();
+    await loadStats();
 }
 
-async function loadGames(search = '') {
+async function showGames() {
+    const content = document.getElementById('content');
+    content.innerHTML = `
+        <div class="section">
+            <h2><i class="fas fa-list"></i> Все игры</h2>
+            <div id="gamesList">Загрузка игр...</div>
+        </div>
+    `;
+    await loadGames();
+}
+
+function showReviews() {
+    const content = document.getElementById('content');
+    content.innerHTML = `
+        <div class="section">
+            <h2><i class="fas fa-star"></i> Обзоры</h2>
+            <p>Здесь будут отображаться обзоры игр.</p>
+            <p>Функция находится в разработке.</p>
+        </div>
+    `;
+}
+
+function showLogin() {
+    const content = document.getElementById('content');
+    content.innerHTML = `
+        <div class="section">
+            <h2><i class="fas fa-sign-in-alt"></i> Вход в систему</h2>
+            <form onsubmit="handleLogin(event)">
+                <input type="text" id="loginUsername" placeholder="Имя пользователя" required>
+                <input type="password" id="loginPassword" placeholder="Пароль" required>
+                <button type="submit" class="btn btn-success">Войти</button>
+            </form>
+        </div>
+    `;
+}
+
+function showRegister() {
+    const content = document.getElementById('content');
+    content.innerHTML = `
+        <div class="section">
+            <h2><i class="fas fa-user-plus"></i> Регистрация</h2>
+            <form onsubmit="handleRegister(event)">
+                <input type="text" id="regUsername" placeholder="Имя пользователя" required>
+                <input type="email" id="regEmail" placeholder="Email" required>
+                <input type="password" id="regPassword" placeholder="Пароль" required>
+                <button type="submit" class="btn btn-success">Зарегистрироваться</button>
+            </form>
+        </div>
+    `;
+}
+
+// Загрузка данных с API
+async function loadStats() {
     try {
-        const games = await api.getGames(search);
-        const gamesList = document.getElementById('gamesList');
-        gamesList.innerHTML = games.map(renderGameCard).join('');
+        const gamesResponse = await fetch('/api/games');
+        const usersResponse = await fetch('/api/users');
+        
+        const games = await gamesResponse.json();
+        const users = await usersResponse.json();
+        
+        document.getElementById('gamesCount').textContent = games.length;
+        document.getElementById('usersCount').textContent = users.length;
     } catch (error) {
-        showAlert(error.message, 'error');
+        console.error('Ошибка загрузки статистики:', error);
+        document.getElementById('gamesCount').textContent = 'Ошибка';
+        document.getElementById('usersCount').textContent = 'Ошибка';
     }
 }
 
-function searchGames() {
-    const search = document.getElementById('searchInput').value;
-    loadGames(search);
+async function loadGames() {
+    try {
+        const response = await fetch('/api/games');
+        const games = await response.json();
+        
+        let html = '<div class="games-grid">';
+        games.forEach(game => {
+            html += `
+                <div class="game-card">
+                    <h3>${game.title}</h3>
+                    <p>${game.description || 'Нет описания'}</p>
+                    <p><small>ID: ${game.id}</small></p>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        document.getElementById('gamesList').innerHTML = html;
+    } catch (error) {
+        console.error('Ошибка загрузки игр:', error);
+        document.getElementById('gamesList').innerHTML = '<p class="error">Ошибка загрузки игр</p>';
+    }
 }
 
-// Инициализация
-document.addEventListener('DOMContentLoaded', async () => {
-    const user = await api.getCurrentUser();
-    if (user) {
-        document.getElementById('userInfo').textContent = user.username;
-        document.getElementById('authButtons').innerHTML = `
-            <button onclick="logout()" class="btn">Выйти</button>
+// Обработчики форм
+function handleLogin(event) {
+    event.preventDefault();
+    alert('Функция входа в разработке');
+}
+
+function handleRegister(event) {
+    event.preventDefault();
+    alert('Функция регистрации в разработке');
+}
+
+// Проверка авторизации (заглушка)
+function checkAuth() {
+    const token = localStorage.getItem('token');
+    const authButtons = document.getElementById('authButtons');
+    const userInfo = document.getElementById('userInfo');
+    
+    if (token) {
+        authButtons.style.display = 'none';
+        userInfo.innerHTML = `
+            <span><i class="fas fa-user"></i> Пользователь</span>
+            <button onclick="logout()" class="btn btn-danger" style="margin-left: 10px;">
+                <i class="fas fa-sign-out-alt"></i> Выйти
+            </button>
         `;
     }
-    showHome();
-});
+}
 
 function logout() {
     localStorage.removeItem('token');
-    currentToken = null;
     location.reload();
 }
-function showSection(sectionId) {
-    // Показать/скрыть секции без перезагрузки
-    document.querySelectorAll('.section').forEach(el => {
-        el.style.display = 'none';
-    });
-    document.getElementById(sectionId).style.display = 'block';
-}
-async function loadGames() {
-    const response = await fetch('/api/games');
-    const games = await response.json();
-    // Отобразить игры на странице
-}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    // Показываем главную страницу по умолчанию
+    showHome();
+    
+    // Проверяем авторизацию
+    checkAuth();
+});
