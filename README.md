@@ -8,8 +8,6 @@
 Полнофункциональная платформа для обзоров видеоигр с современным FullStack стеком
 
 🌐 Демо: [https://game-reviews-platform.onrender.com](https://game-reviews-platform-1.onrender.com/#)  
-📚 API Документация: [https://game-reviews-platform.onrender.com/api/docs](https://game-reviews-platform.onrender.com/api/docs)  
-🐙 GitHub: [https://github.com/kseniyafeo2000-maker/game-reviews-platform](https://github.com/kseniyafeo2000-maker/game-reviews-platform)
 
 ---
 
