@@ -43,5 +43,13 @@
     </footer>
 
     <script src="/static/js/main.js"></script>
+    <div class="section" id="create-game">
+    <h2>Добавить игру</h2>
+    <form onsubmit="createGame(event)">
+        <input type="text" placeholder="Название" required>
+        <textarea placeholder="Описание"></textarea>
+        <button type="submit">Создать</button>
+    </form>
+</div>
 </body>
 </html>
