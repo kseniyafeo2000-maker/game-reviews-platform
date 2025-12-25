@@ -193,3 +193,15 @@ function logout() {
     currentToken = null;
     location.reload();
 }
+function showSection(sectionId) {
+    // Показать/скрыть секции без перезагрузки
+    document.querySelectorAll('.section').forEach(el => {
+        el.style.display = 'none';
+    });
+    document.getElementById(sectionId).style.display = 'block';
+}
+async function loadGames() {
+    const response = await fetch('/api/games');
+    const games = await response.json();
+    // Отобразить игры на странице
+}
