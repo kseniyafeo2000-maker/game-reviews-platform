@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameReviews Platform</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1><i class="fas fa-gamepad"></i> GameReviews Platform</h1>
+            <p>Платформа для обзоров видеоигр</p>
+        </div>
+    </header>
+
+    <nav class="nav">
+        <div class="container">
+            <ul>
+                <li><a href="#" onclick="showHome()"><i class="fas fa-home"></i> Главная</a></li>
+                <li><a href="#" onclick="showGames()"><i class="fas fa-list"></i> Все игры</a></li>
+                <li><a href="#" onclick="showReviews()"><i class="fas fa-star"></i> Обзоры</a></li>
+                <li id="authButtons">
+                    <button onclick="showLogin()" class="btn">Войти</button>
+                    <button onclick="showRegister()" class="btn btn-success">Регистрация</button>
+                </li>
+                <li id="userInfo" style="color: white; margin-left: auto;"></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container" id="content">
+        <!-- Контент будет загружаться динамически -->
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>GameReviews Platform &copy; 2024</p>
+            <p>FastAPI + PostgreSQL + Render.com</p>
+            <p><a href="/api/docs" style="color: #667eea;">API Документация</a></p>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
